@@ -3,256 +3,393 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cloud Chat – Gemini on GitHub Pages</title>
+<title>Chat with Noor</title>
 <style>
   :root {
-    --paper: #eef2f6;
+    --bg: #eef5f1;
     --panel: #ffffff;
-    --ink: #14213d;
-    --muted: #5b6b82;
-    --line: #d3dbe6;
-    --accent: #0b5fff;
+    --ink: #1d2b2a;
+    --muted: #5f7370;
+    --line: #d5e3de;
+    --accent: #0f766e;
     --accent-ink: #ffffff;
-    --user-bg: #14213d;
-    --user-ink: #f4f7fb;
-    --bot-bg: #e3ebf7;
+    --user-bg: #0f766e;
+    --user-ink: #ffffff;
+    --bot-bg: #fff4d6;
+    --chip-bg: #e2f1ec;
     --error: #b3261e;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --paper: #0e1626;
-      --panel: #16213a;
-      --ink: #e8eef9;
-      --muted: #9fb0cb;
-      --line: #2a3a5c;
-      --accent: #6ea0ff;
-      --accent-ink: #0e1626;
-      --user-bg: #6ea0ff;
-      --user-ink: #0e1626;
-      --bot-bg: #1f2e4d;
+      --bg: #0f1b1a;
+      --panel: #172625;
+      --ink: #e6f2ef;
+      --muted: #9bb5b0;
+      --line: #28403d;
+      --accent: #4fd1c0;
+      --accent-ink: #0f1b1a;
+      --user-bg: #4fd1c0;
+      --user-ink: #0f1b1a;
+      --bot-bg: #2b2a1c;
+      --chip-bg: #1f3532;
       --error: #ff8a80;
     }
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   body {
-    background: var(--paper);
+    background: var(--bg);
     color: var(--ink);
-    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
     line-height: 1.55;
     display: flex;
     justify-content: center;
   }
   .app {
     width: 100%;
-    max-width: 760px;
+    max-width: 720px;
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 16px;
+    padding: 14px;
     gap: 12px;
   }
-  header h1 { font-size: 1.5rem; margin: 0; letter-spacing: -0.01em; }
-  header p { margin: 2px 0 0; color: var(--muted); font-size: 0.95rem; }
 
-  details.settings {
+  header { display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    width: 48px; height: 48px; flex: none;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    display: grid; place-items: center;
+    font-size: 1.4rem; font-weight: bold;
+  }
+  .who { flex: 1; min-width: 0; }
+  .who h1 { margin: 0; font-size: 1.25rem; }
+  .who p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+  .icon-btn {
     background: var(--panel);
+    color: var(--ink);
     border: 1px solid var(--line);
     border-radius: 10px;
-    padding: 10px 14px;
-  }
-  details.settings summary { cursor: pointer; font-weight: bold; }
-  .field { display: grid; gap: 4px; margin-top: 12px; }
-  .field label { font-size: 0.85rem; color: var(--muted); }
-  input[type=password], input[type=text], textarea {
+    padding: 8px 12px;
     font: inherit;
-    color: var(--ink);
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 9px 11px;
-    width: 100%;
+    font-size: 0.9rem;
+    cursor: pointer;
   }
-  .check { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 0.9rem; color: var(--muted); }
-  .hint { font-size: 0.85rem; color: var(--muted); margin: 10px 0 0; }
 
   #log {
     flex: 1;
     overflow-y: auto;
     background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: 16px;
     padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
-  .empty { color: var(--muted); margin: auto; text-align: center; max-width: 36ch; }
   .msg {
-    max-width: 85%;
+    max-width: 86%;
     padding: 10px 14px;
-    border-radius: 14px;
-    white-space: pre-wrap;
+    border-radius: 18px;
     overflow-wrap: anywhere;
   }
-  .msg.user { align-self: flex-end; background: var(--user-bg); color: var(--user-ink); border-bottom-right-radius: 4px; }
-  .msg.bot { align-self: flex-start; background: var(--bot-bg); border-bottom-left-radius: 4px; }
-  .msg.error { align-self: flex-start; background: transparent; color: var(--error); border: 1px solid var(--error); }
-  .msg.pending { color: var(--muted); font-style: italic; }
+  .msg p { margin: 0 0 6px; }
+  .msg p:last-child { margin-bottom: 0; }
+  .msg.user { align-self: flex-end; background: var(--user-bg); color: var(--user-ink); border-bottom-right-radius: 5px; }
+  .msg.bot { align-self: flex-start; background: var(--bot-bg); border-bottom-left-radius: 5px; }
+  .msg.problem { align-self: flex-start; background: transparent; border: 1px solid var(--error); color: var(--error); }
+  .msg small { display: block; margin-top: 6px; opacity: 0.8; font-size: 0.78rem; }
+  .bullet { padding-left: 1.1em; text-indent: -1.1em; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; align-self: flex-start; }
+  .chip {
+    background: var(--chip-bg);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font: inherit;
+    font-size: 0.92rem;
+    cursor: pointer;
+  }
+  .chip:hover { border-color: var(--accent); }
+
+  .dots span {
+    display: inline-block; width: 8px; height: 8px; margin-right: 4px;
+    border-radius: 50%; background: var(--muted); opacity: 0.4;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .dots span { animation: bob 1.2s infinite; }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bob { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+    #log { scroll-behavior: smooth; }
+  }
 
   form.composer { display: flex; gap: 8px; align-items: flex-end; }
-  form.composer textarea { resize: none; min-height: 46px; max-height: 140px; }
-  button {
+  textarea, input[type=password], input[type=text] {
     font: inherit;
-    border: 0;
-    border-radius: 8px;
-    padding: 11px 18px;
-    background: var(--accent);
-    color: var(--accent-ink);
-    cursor: pointer;
-    font-weight: bold;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 11px 14px;
+    width: 100%;
   }
-  button.quiet { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: normal; }
-  button:disabled { opacity: 0.55; cursor: not-allowed; }
+  form.composer textarea { resize: none; min-height: 48px; max-height: 140px; }
+  .send {
+    font: inherit; font-weight: bold;
+    border: 0; border-radius: 14px;
+    padding: 12px 20px;
+    background: var(--accent); color: var(--accent-ink);
+    cursor: pointer;
+  }
+  .send:disabled { opacity: 0.5; cursor: not-allowed; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  @media (prefers-reduced-motion: no-preference) { #log { scroll-behavior: smooth; } }
+
+  dialog {
+    background: var(--panel); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 16px;
+    padding: 20px; width: min(92vw, 440px);
+  }
+  dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+  dialog h2 { margin: 0 0 6px; font-size: 1.15rem; }
+  dialog p { margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; }
+  dialog label { display: block; font-size: 0.85rem; color: var(--muted); margin: 12px 0 4px; }
+  .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .check { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 0.9rem; color: var(--muted); }
+  .check input { width: auto; }
 </style>
 </head>
 <body>
 <main class="app">
   <header>
-    <h1>Cloud Chat</h1>
-    <p>A static page on GitHub Pages that talks to the Google Gemini API.</p>
+    <div class="avatar" aria-hidden="true">N</div>
+    <div class="who">
+      <h1>Noor</h1>
+      <p>Here to help, whenever you’re ready.</p>
+    </div>
+    <button class="icon-btn" id="newChat" type="button">New chat</button>
+    <button class="icon-btn" id="openSettings" type="button" aria-label="Settings">Settings</button>
   </header>
 
-  <details class="settings" id="settings" open>
-    <summary>API settings</summary>
-    <div class="field">
-      <label for="apiKey">Gemini API key</label>
-      <input id="apiKey" type="password" autocomplete="off" placeholder="Paste your key from Google AI Studio">
-    </div>
-    <div class="field">
-      <label for="model">Model</label>
-      <input id="model" type="text" value="gemini-3.8-flash">
-    </div>
-    <div class="field">
-      <label for="system">Assistant instructions</label>
-      <textarea id="system" rows="2">You are a friendly assistant for a cloud computing class. Keep answers short and clear.</textarea>
-    </div>
-    <label class="check"><input id="remember" type="checkbox"> Remember the key on this device</label>
-    <p class="hint">The key stays in your browser and is sent only to Google. It is never part of the code in your repository.</p>
-  </details>
-
-  <section id="log" aria-live="polite">
-    <p class="empty" id="empty">Add your API key above, then ask a question to start the conversation.</p>
-  </section>
+  <section id="log" aria-live="polite"></section>
 
   <form class="composer" id="form">
-    <textarea id="prompt" rows="1" placeholder="Type a message" aria-label="Message"></textarea>
-    <button type="submit" id="send">Send</button>
-    <button type="button" class="quiet" id="clear">Clear</button>
+    <textarea id="prompt" rows="1" placeholder="Say hi or ask me anything" aria-label="Your message"></textarea>
+    <button class="send" type="submit" id="send">Send</button>
   </form>
 </main>
+
+<dialog id="settings">
+  <h2>Quick setup</h2>
+  <p>Noor needs your Gemini key to chat. It stays in your browser and is never saved in the website’s code.</p>
+  <label for="apiKey">Gemini API key</label>
+  <input id="apiKey" type="password" autocomplete="off" placeholder="Paste your key here">
+  <label for="model">Model</label>
+  <input id="model" type="text" value="gemini-flash-lite-latest">
+  <label class="check"><input id="remember" type="checkbox"> Remember my key on this device</label>
+  <div class="row">
+    <button class="icon-btn" type="button" id="closeSettings">Done</button>
+  </div>
+</dialog>
 
 <script>
   const $ = (id) => document.getElementById(id);
   const log = $("log"), form = $("form"), promptEl = $("prompt"), sendBtn = $("send");
-  const keyEl = $("apiKey"), modelEl = $("model"), systemEl = $("system"), rememberEl = $("remember");
-  let history = []; // [{role: "user" | "model", parts: [{text}]}]
+  const keyEl = $("apiKey"), modelEl = $("model"), rememberEl = $("remember"), dialog = $("settings");
 
-  // Restore the key if the user chose to remember it
+  const PERSONA = "You are Noor, a warm, friendly and encouraging assistant. " +
+    "Use simple words and short paragraphs. Be kind and positive, and keep answers brief " +
+    "unless the person asks for more detail. Ask a gentle follow-up question when it helps.";
+  const GREETING = "Hi, I’m Noor! It’s lovely to meet you. Ask me anything, or pick one of these to start.";
+  const SUGGESTIONS = [
+    "What is cloud computing?",
+    "Explain it like I’m 10",
+    "Give me a study tip",
+    "Tell me something fun"
+  ];
+
+  let history = [];
+
+  // Restore saved settings
   try {
-    const saved = localStorage.getItem("gemini_key");
-    if (saved) { keyEl.value = saved; rememberEl.checked = true; }
+    const k = localStorage.getItem("noor_key");
+    if (k) { keyEl.value = k; rememberEl.checked = true; }
+    const m = localStorage.getItem("noor_model");
+    if (m) modelEl.value = m;
   } catch (e) {}
 
-  function persistKey() {
+  function saveSettings() {
     try {
-      if (rememberEl.checked && keyEl.value) localStorage.setItem("gemini_key", keyEl.value);
-      else localStorage.removeItem("gemini_key");
+      if (rememberEl.checked && keyEl.value.trim()) localStorage.setItem("noor_key", keyEl.value.trim());
+      else localStorage.removeItem("noor_key");
+      localStorage.setItem("noor_model", modelEl.value.trim());
     } catch (e) {}
   }
-  keyEl.addEventListener("change", persistKey);
-  rememberEl.addEventListener("change", persistKey);
+
+  $("openSettings").addEventListener("click", () => dialog.showModal());
+  $("closeSettings").addEventListener("click", () => { saveSettings(); dialog.close(); promptEl.focus(); });
+  dialog.addEventListener("close", saveSettings);
+
+  // Show text with **bold** and bullet lines, built safely without innerHTML
+  function renderText(container, text) {
+    container.textContent = "";
+    text.split(/\n+/).forEach((line) => {
+      if (!line.trim()) return;
+      const p = document.createElement("p");
+      let body = line;
+      const bullet = body.match(/^\s*[*-]\s+(.*)$/);
+      if (bullet) { body = bullet[1]; p.className = "bullet"; p.appendChild(document.createTextNode("• ")); }
+      body = body.replace(/^#+\s*/, "");
+      body.split(/\*\*(.+?)\*\*/g).forEach((part, i) => {
+        if (i % 2 === 1) { const s = document.createElement("strong"); s.textContent = part; p.appendChild(s); }
+        else if (part) p.appendChild(document.createTextNode(part.replace(/\*/g, "")));
+      });
+      container.appendChild(p);
+    });
+  }
 
   function addMessage(text, kind) {
-    const empty = $("empty");
-    if (empty) empty.remove();
     const div = document.createElement("div");
     div.className = "msg " + kind;
-    div.textContent = text;
+    if (text) renderText(div, text);
     log.appendChild(div);
     log.scrollTop = log.scrollHeight;
     return div;
   }
 
+  function showChips() {
+    const wrap = document.createElement("div");
+    wrap.className = "chips";
+    wrap.id = "chips";
+    SUGGESTIONS.forEach((s) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip";
+      b.textContent = s;
+      b.addEventListener("click", () => sendMessage(s));
+      wrap.appendChild(b);
+    });
+    log.appendChild(wrap);
+  }
+
+  function startChat() {
+    history = [];
+    log.textContent = "";
+    addMessage(GREETING, "bot");
+    showChips();
+  }
+
+  function friendlyError(status, message) {
+    const m = (message || "").toLowerCase();
+    if (m.includes("api key") || status === 401 || status === 403)
+      return "That key doesn’t seem to work. Open Settings and check that it’s pasted correctly.";
+    if (status === 404 || m.includes("not found") || m.includes("no longer available"))
+      return "That model isn’t available. Open Settings and try a different model name.";
+    if (status === 429 || status === 503 || m.includes("high demand") || m.includes("quota"))
+      return "I’m getting a lot of questions right now. Please try again in a minute.";
+    return "Sorry, I couldn’t answer that just now. Please try again.";
+  }
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
   async function askGemini(apiKey, model) {
     const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
       encodeURIComponent(model) + ":generateContent";
-    const body = { contents: history };
-    const sys = systemEl.value.trim();
-    if (sys) body.systemInstruction = { parts: [{ text: sys }] };
+    const body = { contents: history, systemInstruction: { parts: [{ text: PERSONA }] } };
+    let last = { status: 0, message: "" };
 
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify(body)
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      throw new Error((data.error && data.error.message) || ("Request failed with status " + res.status));
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 45000);
+      let res, data;
+      try {
+        res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify(body),
+          signal: controller.signal
+        });
+        data = await res.json().catch(() => ({}));
+      } catch (err) {
+        clearTimeout(timer);
+        last = { status: 0, message: err.name === "AbortError" ? "timeout" : "network" };
+        if (attempt < 2) { await sleep(2000); continue; }
+        break;
+      }
+      clearTimeout(timer);
+
+      if (res.ok) {
+        const cand = data.candidates && data.candidates[0];
+        const parts = cand && cand.content && cand.content.parts;
+        if (parts && parts.length) return parts.map((p) => p.text || "").join("");
+        throw { status: 200, message: "empty answer", friendly: "I couldn’t come up with an answer for that. Could you ask it another way?" };
+      }
+
+      last = { status: res.status, message: (data.error && data.error.message) || ("status " + res.status) };
+      const busy = [429, 500, 503].includes(res.status);
+      if (busy && attempt < 2) { await sleep(2500 * (attempt + 1)); continue; }
+      break;
     }
-    const cand = data.candidates && data.candidates[0];
-    const parts = cand && cand.content && cand.content.parts;
-    if (!parts || !parts.length) {
-      const why = (data.promptFeedback && data.promptFeedback.blockReason) || (cand && cand.finishReason) || "no content";
-      throw new Error("Gemini returned no answer (" + why + ").");
-    }
-    return parts.map((p) => p.text || "").join("");
+    if (last.message === "timeout")
+      throw { status: 0, message: "timeout", friendly: "That’s taking longer than usual. Please try again in a moment." };
+    if (last.message === "network")
+      throw { status: 0, message: "network", friendly: "I can’t connect right now. Please check your internet and try again." };
+    throw { status: last.status, message: last.message, friendly: friendlyError(last.status, last.message) };
   }
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const text = promptEl.value.trim();
+  async function sendMessage(text) {
+    text = text.trim();
+    if (!text || sendBtn.disabled) return;
     const apiKey = keyEl.value.trim();
-    const model = modelEl.value.trim() || "gemini-3.8-flash";
-    if (!text) return;
+    const model = modelEl.value.trim() || "gemini-flash-lite-latest";
+
+    const chips = $("chips");
+    if (chips) chips.remove();
+    addMessage(text, "user");
+    promptEl.value = "";
+
     if (!apiKey) {
-      addMessage("Paste your Gemini API key in the settings first.", "error");
-      $("settings").open = true;
+      addMessage("I’d love to chat! I just need your key first. Tap Settings, paste it in, and say hi again.", "bot");
+      dialog.showModal();
       return;
     }
-    persistKey();
-    addMessage(text, "user");
+
     history.push({ role: "user", parts: [{ text }] });
-    promptEl.value = "";
     sendBtn.disabled = true;
-    const pending = addMessage("Thinking…", "bot pending");
+    const pending = addMessage("", "bot");
+    pending.innerHTML = '<span class="dots" aria-label="Noor is typing"><span></span><span></span><span></span></span>';
+
     try {
       const answer = await askGemini(apiKey, model);
       history.push({ role: "model", parts: [{ text: answer }] });
-      pending.className = "msg bot";
-      pending.textContent = answer;
+      renderText(pending, answer);
     } catch (err) {
-      history.pop(); // drop the unanswered user turn so the next try is clean
-      pending.className = "msg error";
-      pending.textContent = "Could not get a reply: " + err.message;
+      history.pop();
+      pending.className = "msg problem";
+      pending.textContent = (err && err.friendly) || "Sorry, something went wrong. Please try again.";
+      if (err && err.message) {
+        const detail = document.createElement("small");
+        detail.textContent = "Details: " + err.message;
+        pending.appendChild(detail);
+      }
     } finally {
       sendBtn.disabled = false;
       promptEl.focus();
       log.scrollTop = log.scrollHeight;
     }
-  });
+  }
 
-  // Enter sends, Shift+Enter adds a new line
+  form.addEventListener("submit", (e) => { e.preventDefault(); sendMessage(promptEl.value); });
   promptEl.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
   });
+  $("newChat").addEventListener("click", startChat);
 
-  $("clear").addEventListener("click", () => {
-    history = [];
-    log.innerHTML = '<p class="empty" id="empty">Conversation cleared. Ask something new.</p>';
-  });
+  startChat();
 </script>
 </body>
 </html>
