@@ -133,7 +133,7 @@
     </div>
     <div class="field">
       <label for="model">Model</label>
-      <input id="model" type="text" value="gemini-2.5-flash">
+      <input id="model" type="text" value="gemini-3.8-flash">
     </div>
     <div class="field">
       <label for="system">Assistant instructions</label>
@@ -215,7 +215,7 @@
     e.preventDefault();
     const text = promptEl.value.trim();
     const apiKey = keyEl.value.trim();
-    const model = modelEl.value.trim() || "gemini-2.5-flash";
+    const model = modelEl.value.trim() || "gemini-3.8-flash";
     if (!text) return;
     if (!apiKey) {
       addMessage("Paste your Gemini API key in the settings first.", "error");
