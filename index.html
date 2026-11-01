@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cloud Chat – Gemini on GitHub Pages</title>
+<style>
+  :root {
+    --paper: #eef2f6;
+    --panel: #ffffff;
+    --ink: #14213d;
+    --muted: #5b6b82;
+    --line: #d3dbe6;
+    --accent: #0b5fff;
+    --accent-ink: #ffffff;
+    --user-bg: #14213d;
+    --user-ink: #f4f7fb;
+    --bot-bg: #e3ebf7;
+    --error: #b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0e1626;
+      --panel: #16213a;
+      --ink: #e8eef9;
+      --muted: #9fb0cb;
+      --line: #2a3a5c;
+      --accent: #6ea0ff;
+      --accent-ink: #0e1626;
+      --user-bg: #6ea0ff;
+      --user-ink: #0e1626;
+      --bot-bg: #1f2e4d;
+      --error: #ff8a80;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    line-height: 1.55;
+    display: flex;
+    justify-content: center;
+  }
+  .app {
+    width: 100%;
+    max-width: 760px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+  }
+  header h1 { font-size: 1.5rem; margin: 0; letter-spacing: -0.01em; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 0.95rem; }
+
+  details.settings {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+  details.settings summary { cursor: pointer; font-weight: bold; }
+  .field { display: grid; gap: 4px; margin-top: 12px; }
+  .field label { font-size: 0.85rem; color: var(--muted); }
+  input[type=password], input[type=text], textarea {
+    font: inherit;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 11px;
+    width: 100%;
+  }
+  .check { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 0.9rem; color: var(--muted); }
+  .hint { font-size: 0.85rem; color: var(--muted); margin: 10px 0 0; }
+
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .empty { color: var(--muted); margin: auto; text-align: center; max-width: 36ch; }
+  .msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .msg.user { align-self: flex-end; background: var(--user-bg); color: var(--user-ink); border-bottom-right-radius: 4px; }
+  .msg.bot { align-self: flex-start; background: var(--bot-bg); border-bottom-left-radius: 4px; }
+  .msg.error { align-self: flex-start; background: transparent; color: var(--error); border: 1px solid var(--error); }
+  .msg.pending { color: var(--muted); font-style: italic; }
+
+  form.composer { display: flex; gap: 8px; align-items: flex-end; }
+  form.composer textarea { resize: none; min-height: 46px; max-height: 140px; }
+  button {
+    font: inherit;
+    border: 0;
+    border-radius: 8px;
+    padding: 11px 18px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+    font-weight: bold;
+  }
+  button.quiet { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: normal; }
+  button:disabled { opacity: 0.55; cursor: not-allowed; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: no-preference) { #log { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <h1>Cloud Chat</h1>
+    <p>A static page on GitHub Pages that talks to the Google Gemini API.</p>
+  </header>
+
+  <details class="settings" id="settings" open>
+    <summary>API settings</summary>
+    <div class="field">
+      <label for="apiKey">Gemini API key</label>
+      <input id="apiKey" type="password" autocomplete="off" placeholder="Paste your key from Google AI Studio">
+    </div>
+    <div class="field">
+      <label for="model">Model</label>
+      <input id="model" type="text" value="gemini-2.5-flash">
+    </div>
+    <div class="field">
+      <label for="system">Assistant instructions</label>
+      <textarea id="system" rows="2">You are a friendly assistant for a cloud computing class. Keep answers short and clear.</textarea>
+    </div>
+    <label class="check"><input id="remember" type="checkbox"> Remember the key on this device</label>
+    <p class="hint">The key stays in your browser and is sent only to Google. It is never part of the code in your repository.</p>
+  </details>
+
+  <section id="log" aria-live="polite">
+    <p class="empty" id="empty">Add your API key above, then ask a question to start the conversation.</p>
+  </section>
+
+  <form class="composer" id="form">
+    <textarea id="prompt" rows="1" placeholder="Type a message" aria-label="Message"></textarea>
+    <button type="submit" id="send">Send</button>
+    <button type="button" class="quiet" id="clear">Clear</button>
+  </form>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const log = $("log"), form = $("form"), promptEl = $("prompt"), sendBtn = $("send");
+  const keyEl = $("apiKey"), modelEl = $("model"), systemEl = $("system"), rememberEl = $("remember");
+  let history = []; // [{role: "user" | "model", parts: [{text}]}]
+
+  // Restore the key if the user chose to remember it
+  try {
+    const saved = localStorage.getItem("gemini_key");
+    if (saved) { keyEl.value = saved; rememberEl.checked = true; }
+  } catch (e) {}
+
+  function persistKey() {
+    try {
+      if (rememberEl.checked && keyEl.value) localStorage.setItem("gemini_key", keyEl.value);
+      else localStorage.removeItem("gemini_key");
+    } catch (e) {}
+  }
+  keyEl.addEventListener("change", persistKey);
+  rememberEl.addEventListener("change", persistKey);
+
+  function addMessage(text, kind) {
+    const empty = $("empty");
+    if (empty) empty.remove();
+    const div = document.createElement("div");
+    div.className = "msg " + kind;
+    div.textContent = text;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+    return div;
+  }
+
+  async function askGemini(apiKey, model) {
+    const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
+      encodeURIComponent(model) + ":generateContent";
+    const body = { contents: history };
+    const sys = systemEl.value.trim();
+    if (sys) body.systemInstruction = { parts: [{ text: sys }] };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error((data.error && data.error.message) || ("Request failed with status " + res.status));
+    }
+    const cand = data.candidates && data.candidates[0];
+    const parts = cand && cand.content && cand.content.parts;
+    if (!parts || !parts.length) {
+      const why = (data.promptFeedback && data.promptFeedback.blockReason) || (cand && cand.finishReason) || "no content";
+      throw new Error("Gemini returned no answer (" + why + ").");
+    }
+    return parts.map((p) => p.text || "").join("");
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = promptEl.value.trim();
+    const apiKey = keyEl.value.trim();
+    const model = modelEl.value.trim() || "gemini-2.5-flash";
+    if (!text) return;
+    if (!apiKey) {
+      addMessage("Paste your Gemini API key in the settings first.", "error");
+      $("settings").open = true;
+      return;
+    }
+    persistKey();
+    addMessage(text, "user");
+    history.push({ role: "user", parts: [{ text }] });
+    promptEl.value = "";
+    sendBtn.disabled = true;
+    const pending = addMessage("Thinking…", "bot pending");
+    try {
+      const answer = await askGemini(apiKey, model);
+      history.push({ role: "model", parts: [{ text: answer }] });
+      pending.className = "msg bot";
+      pending.textContent = answer;
+    } catch (err) {
+      history.pop(); // drop the unanswered user turn so the next try is clean
+      pending.className = "msg error";
+      pending.textContent = "Could not get a reply: " + err.message;
+    } finally {
+      sendBtn.disabled = false;
+      promptEl.focus();
+      log.scrollTop = log.scrollHeight;
+    }
+  });
+
+  // Enter sends, Shift+Enter adds a new line
+  promptEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+  });
+
+  $("clear").addEventListener("click", () => {
+    history = [];
+    log.innerHTML = '<p class="empty" id="empty">Conversation cleared. Ask something new.</p>';
+  });
+</script>
+</body>
+</html>
